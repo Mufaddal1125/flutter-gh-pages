@@ -32,8 +32,19 @@ runs:
   steps:
     - run: flutter config --enable-web
       shell: bash
+    - run: echo "flutter_version=$(flutter --version)" >> $GITHUB_ENV
+      shell: bash
+    # get numeric version of flutter (remove all non-numeric characters)
+    - run: echo "flutter_version_number=$(echo $flutter_version | tr -dc '0-9')" >> $GITHUB_ENV
+      shell: bash
+    - run: flutter build web --release --web-renderer=${{inputs.webRenderer}} --base-href ${{inputs.baseHref}} ${{inputs.customArgs}}
+      # run only if flutter version < 329
+      if: ${{ env.flutter_version_number < 329 }}
+      shell: bash
       working-directory: ${{inputs.workingDir}}
     - run: flutter build web --release --web-renderer=${{inputs.webRenderer}} --base-href ${{inputs.baseHref}} ${{inputs.customArgs}}
+      # run only if flutter version >= 329
+      if: ${{ env.flutter_version_number >= 329 }}
       shell: bash
       working-directory: ${{inputs.workingDir}}
     - run: git config user.name github-actions
